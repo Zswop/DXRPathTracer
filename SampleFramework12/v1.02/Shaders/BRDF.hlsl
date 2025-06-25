@@ -125,6 +125,19 @@ float SmithGGXMaskingShadowing(float3 n, float3 l, float3 v, float a2)
 // Rough Surfaces" [Walter 07]. m is roughness, n is the surface normal, h is the half vector,
 // l is the direction to the light source, and specAlbedo is the RGB specular albedo
 //-------------------------------------------------------------------------------------------------
+
+float GGXNDF(in float m, in float3 n, in float3 h) {
+    float nDotH = saturate(dot(n, h));
+
+    float nDotH2 = nDotH * nDotH;
+    float m2 = m * m;
+
+    // Calculate the distribution term
+    float x = nDotH * nDotH * (m2 - 1) + 1;
+    float d = m2 / (Pi * x * x);
+    return d;
+}
+
 float GGXSpecular(in float m, in float3 n, in float3 h, in float3 v, in float3 l)
 {
     float nDotH = saturate(dot(n, h));

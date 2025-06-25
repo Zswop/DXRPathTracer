@@ -962,7 +962,8 @@ void DXRPathTracer::Update(const Timer& timer)
         &AppSettings::MaxAnyHitPathLength,
         &AppSettings::AvoidCausticPaths,
         &AppSettings::ClampRoughness,
-        &AppSettings::ApplyMultiscatteringEnergyCompensation
+        &AppSettings::ApplyMultiscatteringEnergyCompensation,
+        &AppSettings::SamplingMode
     };
 
     for(const Setting* setting : settingsToCheck)
@@ -1317,6 +1318,8 @@ void DXRPathTracer::RenderRayTracing()
         return;
 
     ID3D12GraphicsCommandList4* cmdList = DX12::CmdList;
+    PIXMarker pixMarker(cmdList, "RayTracing");
+
     cmdList->SetComputeRootSignature(rtRootSignature);
 
     DX12::BindGlobalSRVDescriptorTable(cmdList, RTParams_StandardDescriptors, CmdListMode::Compute);

@@ -26,6 +26,13 @@ static const char* ClusterRasterizationModesLabels[] =
     "Conservative",
 };
 
+static const char* SamplingModesLabels[] =
+{
+    "GGXVisibleNormal",
+    "DirectionGGX",
+    "Cosine",
+};
+
 namespace AppSettings
 {
     static SettingsContainer Settings;
@@ -48,6 +55,7 @@ namespace AppSettings
     IntSetting SqrtNumSamples;
     IntSetting MaxPathLength;
     IntSetting MaxAnyHitPathLength;
+    SamplingModesSetting SamplingMode;
     FloatSetting Exposure;
     FloatSetting BloomExposure;
     FloatSetting BloomMagnitude;
@@ -111,7 +119,7 @@ namespace AppSettings
         GroundAlbedo.Initialize("GroundAlbedo", "Sun And Sky", "Ground Albedo", "Ground albedo color used for procedural sun and sky model", Float3(0.2500f, 0.2500f, 0.2500f), false, -340282300000000000000000000000000000000.0000f, 340282300000000000000000000000000000000.0000f, 0.0100f, ColorUnit::None);
         Settings.AddSetting(&GroundAlbedo);
 
-        MSAAMode.Initialize("MSAAMode", "Anti Aliasing", "MSAA Mode", "MSAA mode to use for rendering", MSAAModes::MSAA4x, 3, MSAAModesLabels);
+        MSAAMode.Initialize("MSAAMode", "Anti Aliasing", "MSAAMode", "MSAA mode to use for rendering", MSAAModes::MSAA4x, 3, MSAAModesLabels);
         Settings.AddSetting(&MSAAMode);
 
         CurrentScene.Initialize("CurrentScene", "Scene", "Current Scene", "", Scenes::BoxTest, 4, ScenesLabels);
@@ -120,7 +128,7 @@ namespace AppSettings
         RenderLights.Initialize("RenderLights", "Scene", "Render Lights", "Enable or disable spot light rendering", true);
         Settings.AddSetting(&RenderLights);
 
-        MaxLightClamp.Initialize("MaxLightClamp", "Rendering", "Max Lights", "Limits the number of lights in the scene", 32, 0, 32);
+        MaxLightClamp.Initialize("MaxLightClamp", "Rendering", "Max Light Clamp", "Limits the number of lights in the scene", 32, 0, 32);
         Settings.AddSetting(&MaxLightClamp);
 
         ClusterRasterizationMode.Initialize("ClusterRasterizationMode", "Rendering", "Cluster Rasterization Mode", "Conservative rasterization mode to use for light binning", ClusterRasterizationModes::Conservative, 4, ClusterRasterizationModesLabels);
@@ -141,13 +149,16 @@ namespace AppSettings
         MaxPathLength.Initialize("MaxPathLength", "Path Tracing", "Max Path Length", "Maximum path length (bounces) to use for path tracing", 3, 2, 8);
         Settings.AddSetting(&MaxPathLength);
 
-        MaxAnyHitPathLength.Initialize("MaxAnyHitPathLength", "Path Tracing", "Max Any-Hit Path Length", "The maximum path length where any-hit shaders will be used for alpha testing. Increasing this with improve the render quality, but will also increase frame times", 1, 0, 8);
+        MaxAnyHitPathLength.Initialize("MaxAnyHitPathLength", "Path Tracing", "Max Any Hit Path Length", "The maximum path length where any-hit shaders will be used for alpha testing. Increasing this with improve the render quality, but will also increase frame times", 1, 0, 8);
         Settings.AddSetting(&MaxAnyHitPathLength);
+
+        SamplingMode.Initialize("SamplingMode", "Path Tracing", "Sampling Mode", "Importance Sampling with ndf, vndf, cosine", SamplingModes::GGXVisibleNormal, 3, SamplingModesLabels);
+        Settings.AddSetting(&SamplingMode);
 
         Exposure.Initialize("Exposure", "Post Processing", "Exposure", "Simple exposure value applied to the scene before tone mapping (uses log2 scale)", -14.0000f, -24.0000f, 24.0000f, 0.1000f, ConversionMode::None, 1.0000f);
         Settings.AddSetting(&Exposure);
 
-        BloomExposure.Initialize("BloomExposure", "Post Processing", "Bloom Exposure Offset", "Exposure offset applied to generate the input of the bloom pass", -4.0000f, -10.0000f, 0.0000f, 0.0100f, ConversionMode::None, 1.0000f);
+        BloomExposure.Initialize("BloomExposure", "Post Processing", "Bloom Exposure", "Exposure offset applied to generate the input of the bloom pass", -4.0000f, -10.0000f, 0.0000f, 0.0100f, ConversionMode::None, 1.0000f);
         Settings.AddSetting(&BloomExposure);
 
         BloomMagnitude.Initialize("BloomMagnitude", "Post Processing", "Bloom Magnitude", "Scale factor applied to the bloom results when combined with tone-mapped result", 1.0000f, 0.0000f, 2.0000f, 0.0100f, ConversionMode::None, 1.0000f);
@@ -231,6 +242,7 @@ namespace AppSettings
         cbData.SqrtNumSamples = SqrtNumSamples;
         cbData.MaxPathLength = MaxPathLength;
         cbData.MaxAnyHitPathLength = MaxAnyHitPathLength;
+        cbData.SamplingMode = SamplingMode;
         cbData.Exposure = Exposure;
         cbData.BloomExposure = BloomExposure;
         cbData.BloomMagnitude = BloomMagnitude;

@@ -13,6 +13,7 @@ struct AppSettings_Layout
     int SqrtNumSamples;
     int MaxPathLength;
     int MaxAnyHitPathLength;
+    int SamplingMode;
     float Exposure;
     float BloomExposure;
     float BloomMagnitude;
@@ -45,6 +46,10 @@ static const int ClusterRasterizationModes_Normal = 0;
 static const int ClusterRasterizationModes_MSAA4x = 1;
 static const int ClusterRasterizationModes_MSAA8x = 2;
 static const int ClusterRasterizationModes_Conservative = 3;
+
+static const int SamplingModes_GGXVisibleNormal = 0;
+static const int SamplingModes_DirectionGGX = 1;
+static const int SamplingModes_Cosine = 2;
 
 static const uint ClusterTileSize = 16;
 static const uint NumZTiles = 16;

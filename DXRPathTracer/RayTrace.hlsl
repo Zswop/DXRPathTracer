@@ -343,18 +343,62 @@ static float3 PathTrace(in MeshVertex hitSurface, in Material material, in Prima
         if(enableDiffuse)
             brdfSample.x = (brdfSample.x - 0.5f) * 2.0f;
 
-        float3 incomingRayDirTS = normalize(mul(incomingRayDirWS, transpose(tangentToWorld)));
-        float3 microfacetNormalTS = SampleGGXVisibleNormal(-incomingRayDirTS, roughness, roughness, brdfSample.x, brdfSample.y);
-        float3 sampleDirTS = reflect(incomingRayDirTS, microfacetNormalTS);
+        const int samplingType = AppSettings.SamplingMode;
 
+        float3 incomingRayDirTS = normalize(mul(incomingRayDirWS, transpose(tangentToWorld)));
         float3 normalTS = float3(0.0f, 0.0f, 1.0f);
 
-        float3 F = AppSettings.EnableWhiteFurnaceMode ? 1.0.xxx : Fresnel(specularAlbedo, microfacetNormalTS, sampleDirTS);
-        float G1 = SmithGGXMasking(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
-        float G2 = SmithGGXMaskingShadowing(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
+        if (samplingType == 2) // sampling cosine 
+        {
+            float3 sampleDirTS = SampleDirectionCosineHemisphere(brdfSample.x, brdfSample.y);
+            float3 microfacetNormalTS = normalize(sampleDirTS - incomingRayDirWS);
+            float nDotL = saturate(dot(normalTS, sampleDirTS));
+            float nDotV = saturate(dot(normalTS, -incomingRayDirWS));
+            
+            if (nDotL > 0.0f && nDotV > 0.0f) {                
+                float3 F = AppSettings.EnableWhiteFurnaceMode ? 1.0.xxx : Fresnel(specularAlbedo, microfacetNormalTS, sampleDirTS);
+                float G2 = SmithGGXMaskingShadowing(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
+                float D = GGXNDF(roughness * roughness, normalTS, microfacetNormalTS);
 
-        throughput = (F * (G2 / G1));
-        rayDirTS = sampleDirTS;
+                float PDF = SampleDirectionCosineHemisphere_PDF(nDotL);
+
+                throughput = (F * G2 * D / (4 * nDotV * nDotL * PDF));
+                rayDirTS = sampleDirTS;
+            }
+        }
+        else if (samplingType == 1) //sampling ndf
+        {
+            float3 microfacetNormalTS = SampleDirectionGGX(-incomingRayDirTS, normalTS, roughness, brdfSample.x, brdfSample.y);
+
+            float3 sampleDirTS = reflect(incomingRayDirTS, microfacetNormalTS);
+
+            float nDotL = saturate(dot(normalTS, sampleDirTS));
+            float nDotV = saturate(dot(normalTS, -incomingRayDirWS));
+
+            if (nDotL > 0.0f && nDotV > 0.0f) {
+                float nDotH = saturate(dot(normalTS, microfacetNormalTS));
+                float vDotH = saturate(dot(-incomingRayDirWS, microfacetNormalTS));
+
+                float3 F = AppSettings.EnableWhiteFurnaceMode ? 1.0.xxx : Fresnel(specularAlbedo, microfacetNormalTS, sampleDirTS);
+                float G2 = SmithGGXMaskingShadowing(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
+
+                throughput = (F * G2 * vDotH / (nDotV * nDotH));
+                rayDirTS = sampleDirTS;
+            }
+        }
+        else  //sampling vndf
+        {
+            float3 microfacetNormalTS = SampleGGXVisibleNormal(-incomingRayDirTS, roughness, roughness, brdfSample.x, brdfSample.y);
+
+            float3 sampleDirTS = reflect(incomingRayDirTS, microfacetNormalTS);
+
+            float3 F = AppSettings.EnableWhiteFurnaceMode ? 1.0.xxx : Fresnel(specularAlbedo, microfacetNormalTS, sampleDirTS);
+            float G1 = SmithGGXMasking(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
+            float G2 = SmithGGXMaskingShadowing(normalTS, sampleDirTS, -incomingRayDirTS, roughness * roughness);
+
+            throughput = (F * (G2 / G1));
+            rayDirTS = sampleDirTS;
+        }
 
         if(AppSettings.ApplyMultiscatteringEnergyCompensation)
         {

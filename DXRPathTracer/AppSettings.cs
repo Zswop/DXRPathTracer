@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 enum Scenes
 {
     Sponza = 0,
@@ -32,6 +34,16 @@ enum DepthSortModes
     FrontToBack,
     BackToFront
 }
+
+enum SamplingModes
+{
+    [EnumLabel("GGXVisibleNormal")]
+    GGXVisibleNormal = 0,
+    [EnumLabel("DirectionGGX")]
+    DirectionGGX,
+    [EnumLabel("Cosine")]
+    Cosine
+};
 
 public class Settings
 {
@@ -71,8 +83,7 @@ public class Settings
     [ExpandGroup(false)]
     public class AntiAliasing
     {
-        [HelpText("MSAA mode to use for rendering")]
-        [DisplayName("MSAA Mode")]
+        [HelpText("MSAA mode to use for rendering")]        
         MSAAModes MSAAMode = MSAAModes.MSAA4x;
     }
 
@@ -101,7 +112,6 @@ public class Settings
         [UseAsShaderConstant(false)]
         [MinValue(0)]
         [MaxValue((int)MaxSpotLights)]
-        [DisplayName("Max Lights")]
         [HelpText("Limits the number of lights in the scene")]
         int MaxLightClamp = (int)MaxSpotLights;
 
@@ -130,20 +140,20 @@ public class Settings
         [HelpText("The square root of the number of per-pixel sample rays to use for path tracing")]
         [MinValue(1)]
         [MaxValue(100)]
-        [DisplayName("Sqrt Num Samples")]
         int SqrtNumSamples = 4;
 
         [HelpText("Maximum path length (bounces) to use for path tracing")]
         [MinValue(2)]
         [MaxValue(MaxPathLengthSetting)]
-        [DisplayName("Max Path Length")]
         int MaxPathLength = 3;
 
         [HelpText("The maximum path length where any-hit shaders will be used for alpha testing. Increasing this with improve the render quality, but will also increase frame times")]
         [MinValue(0)]
         [MaxValue(MaxPathLengthSetting)]
-        [DisplayName("Max Any-Hit Path Length")]
         int MaxAnyHitPathLength = 1;
+
+        [HelpText("Importance Sampling with ndf, vndf, cosine")]        
+        SamplingModes SamplingMode = SamplingModes.GGXVisibleNormal;
     }
 
     [ExpandGroup(false)]
@@ -154,22 +164,19 @@ public class Settings
         [StepSize(0.1f)]
         [HelpText("Simple exposure value applied to the scene before tone mapping (uses log2 scale)")]
         float Exposure = -14.0f;
-
-        [DisplayName("Bloom Exposure Offset")]
+        
         [MinValue(-10.0f)]
         [MaxValue(0.0f)]
         [StepSize(0.01f)]
         [HelpText("Exposure offset applied to generate the input of the bloom pass")]
         float BloomExposure = -4.0f;
-
-        [DisplayName("Bloom Magnitude")]
+        
         [MinValue(0.0f)]
         [MaxValue(2.0f)]
         [StepSize(0.01f)]
         [HelpText("Scale factor applied to the bloom results when combined with tone-mapped result")]
         float BloomMagnitude = 1.0f;
-
-        [DisplayName("Bloom Blur Sigma")]
+        
         [MinValue(0.5f)]
         [MaxValue(2.5f)]
         [StepSize(0.01f)]
@@ -181,19 +188,16 @@ public class Settings
     public class Debug
     {
         [UseAsShaderConstant(false)]
-        [DisplayName("Enable VSync")]
         [HelpText("Enables or disables vertical sync during Present")]
         bool EnableVSync = true;
 
         [UseAsShaderConstant(false)]
         [HelpText("Enables the stable power state, which stabilizes GPU clocks for more consistent performance")]
         bool StablePowerState = false;
-
-        [DisplayName("Enable Albedo Maps")]
+        
         [HelpText("Enables albedo maps")]
         bool EnableAlbedoMaps = true;
 
-        [DisplayName("Enable Normal Maps")]
         [HelpText("Enables normal maps")]
         bool EnableNormalMaps = true;
 

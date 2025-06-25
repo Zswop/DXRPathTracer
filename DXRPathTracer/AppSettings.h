@@ -41,6 +41,17 @@ enum class ClusterRasterizationModes
 
 typedef EnumSettingT<ClusterRasterizationModes> ClusterRasterizationModesSetting;
 
+enum class SamplingModes
+{
+    GGXVisibleNormal = 0,
+    DirectionGGX = 1,
+    Cosine = 2,
+
+    NumValues
+};
+
+typedef EnumSettingT<SamplingModes> SamplingModesSetting;
+
 namespace AppSettings
 {
     static const uint64 ClusterTileSize = 16;
@@ -72,6 +83,7 @@ namespace AppSettings
     extern IntSetting SqrtNumSamples;
     extern IntSetting MaxPathLength;
     extern IntSetting MaxAnyHitPathLength;
+    extern SamplingModesSetting SamplingMode;
     extern FloatSetting Exposure;
     extern FloatSetting BloomExposure;
     extern FloatSetting BloomMagnitude;
@@ -107,6 +119,7 @@ namespace AppSettings
         int32 SqrtNumSamples;
         int32 MaxPathLength;
         int32 MaxAnyHitPathLength;
+        int32 SamplingMode;
         float Exposure;
         float BloomExposure;
         float BloomMagnitude;
